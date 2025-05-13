@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dungeons & Decisions - RPG Zoeiro</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background-color: #1b1b1b;
+      color: #f1f1f1;
+      text-align: center;
+      padding: 20px;
+    }
+    .ascii {
+      white-space: pre;
+      font-size: 14px;
+      color: #ff5555;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      background-color: #282828;
+      color: #00ffcc;
+      border: 2px solid #00ffcc;
+      border-radius: 5px;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background-color: #00ffcc;
+      color: #1b1b1b;
+    }
+    .log {
+      max-width: 700px;
+      margin: 20px auto;
+      background-color: #2c2c2c;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+      color: #c2fbea;
+    }
+    h1 {
+      color: #00ffff;
+    }
+    .ranking {
+      margin-top: 30px;
+      background-color: #333;
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <audio id="sound-roll" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
+  <audio id="sound-win" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+  <audio id="sound-lose" src="https://www.soundjay.com/human/sounds/boo-01.mp3" preload="auto"></audio>
+
+  <div class="ascii">
+    ⠀⠀⠀⠀⢀⣀⣤⣤⣤⣤⣄⡀⠀⠀⠀⠀<br>
+    ⠀⢀⣤⣾⣿⣾⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀<br>
+    ⢠⣾⣿⢛⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀<br>
+    ⣾⣯⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧<br>
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿<br>
+    ⣿⡿⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠻⢿⡵<br>
+    ⢸⡇⠀⠀⠉⠛⠛⣿⣿⠛⠛⠉⠀⠀⣿⡇<br>
+    ⢸⣿⣀⠀⢀⣠⣴⡇⠹⣦⣄⡀⠀⣠⣿⡇<br>
+    ⠈⠻⠿⠿⣟⣿⣿⣦⣤⣼⣿⣿⠿⠿⠟⠀<br>
+    ⠀⠀⠀⠀⠸⡿⣿⣿⢿⡿⢿⠇⠀⠀⠀⠀<br>
+  </div>
+  <h1>DUNGEONS & DECISIONS - RPG Zoeiro</h1>
+  <p>Você é um guerreiro... que acha que sabe o que está fazendo!</p>
+  <button onclick="startGame()">🎲 Começar Jogo</button>
+  <button id="roll-button" style="display:none;" onclick="proximaRodada()">🎲 Rolar Dado da Rodada</button>
+  <div class="log" id="log"></div>
+
+  <div class="ranking" id="ranking">
+    <h2>🏅 Ranking dos Heróis</h2>
+    <ol id="ranking-list"></ol>
+  </div>
+
+  <script>
+    const nomes = [
+      "Tharion Martel de Ferro",
+      "Kael, o Rasgador de Sombras",
+      "Baldur Punho Flamejante",
+      "Eldrak Lanca de Prata",
+      "Ragnar, o Olho da Tempestade"
+    ];
+    let pontos = 0;
+    let rodada = 1;
+    let tentativas = 0;
+    let nome_heroi = "";
+    const logDiv = document.getElementById('log');
+    const soundRoll = document.getElementById('sound-roll');
+    const soundWin = document.getElementById('sound-win');
+    const soundLose = document.getElementById('sound-lose');
+
+    function escrever(texto) {
+      const p = document.createElement("p");
+      p.innerHTML = texto;
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function startGame() {
+      nome_heroi = nomes[Math.floor(Math.random() * nomes.length)];
+      escrever(`<strong>Você é ${nome_heroi}</strong>`);
+      const dado = Math.floor(Math.random() * 20) + 1;
+      escrever(`🎲 Você rolou o dado... Saiu: ${dado}`);
+      soundRoll.play();
+      if (dado < 10) {
+        pontos -= 5;
+        escrever('😞 Começou com azar... -5 pontos.');
+      } else {
+        pontos += 5;
+        escrever('😄 Sorte de principiante! +5 pontos.');
+      }
+      document.getElementById("roll-button").style.display = "inline-block";
+    }
+
+    function proximaRodada() {
+      soundRoll.play();
+      if (pontos >= 30) {
+        escrever(`🏆 Você venceu com ${pontos} pontos! Final: ${finalZoeiro(nome_heroi)}`);
+        soundWin.play();
+        salvarRanking(nome_heroi, pontos);
+        document.getElementById("roll-button").style.display = "none";
+        return;
+      }
+
+      if (tentativas >= 15 && pontos < 30) {
+        escrever(`☠️ <strong>GAME OVER</strong> - Pontuação final: ${pontos}`);
+        escrever(`<pre style='color:#ff5555; font-size: 12px; text-align: left;'>
+_                   _
+_( )                 ( )_
+(_, |      __ __      | ,_)
+   '\'\    /  ^  \    /'/
+    '\'\,/\      \,/'/'
+      '\| []   [] |/'
+        (_  /^\  _)
+          \  ~  /
+          /HHHHH\
+        /'/{^^^}\'\
+    _,/'/'  ^^^  '\'\,_
+   (_, |           | ,_)
+     (_)           (_)
+</pre>`);
+        soundLose.play();
+        salvarRanking(nome_heroi, pontos);
+        document.getElementById("roll-button").style.display = "none";
+        return;
+      }
+
+      const evento = Math.floor(Math.random() * 3) + 1;
+      const acao = Math.floor(Math.random() * 3) + 1;
+      escrever(`Rodada ${rodada}: Evento ${evento}, ação do herói: ${acao}`);
+      if (evento === acao) {
+        pontos += 10;
+        escrever('✅ Mandou bem! +10 pontos.');
+      } else {
+        pontos -= 5;
+        escrever('❌ Ih rapaz... -5 pontos.');
+      }
+      rodada++;
+      tentativas++;
+    }
+
+    function finalZoeiro(nome) {
+      if (nome.includes("Tharion")) return "abriu uma academia de goblins.";
+      if (nome.includes("Kael")) return "domou um exército de morcegos cantores.";
+      if (nome.includes("Baldur")) return "virou tiktoker de receitas com lava.";
+      if (nome.includes("Eldrak")) return "vendeu sua lança pra comprar pão.";
+      if (nome.includes("Ragnar")) return "lidera uma seita de Wi-Fi eterno.";
+      return "virou lenda urbana contada por trolls em tabernas.";
+    }
+
+    function salvarRanking(nome, pontos) {
+      let ranking = JSON.parse(localStorage.getItem("rankingZoeiro") || "[]");
+      ranking.push({ nome, pontos });
+      ranking.sort((a, b) => b.pontos - a.pontos);
+      ranking = ranking.slice(0, 5); // Top 5
+      localStorage.setItem("rankingZoeiro", JSON.stringify(ranking));
+      atualizarRanking();
+    }
+
+    function atualizarRanking() {
+      const rankingList = document.getElementById("ranking-list");
+      rankingList.innerHTML = "";
+      const ranking = JSON.parse(localStorage.getItem("rankingZoeiro") || "[]");
+      ranking.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${item.nome} - ${item.pontos} pontos`;
+        rankingList.appendChild(li);
+      });
+    }
+
+    window.onload = atualizarRanking;
+  </script>
+</body>
+</html>
